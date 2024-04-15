@@ -1,0 +1,158 @@
+
+
+```{r}
+rm(list=ls(all=TRUE)) 	# clear data
+
+library(readxl)
+library("forecast")
+library("tseries")
+
+data <- read_xlsx("2020_Covid_Data.xlsx") 	# daily data
+names(data)
+head(data,5)
+#Get the data from my State ky
+
+cases <- data$KY[-length(data$KY)]
+
+#split the data of training(data in 2020) and actual data of data I want to test (Jan.1.2021 to Feb.10.2021)
+cases_2020 <- cases[1:345]
+cases_2021 <- cases[346:(346+40)]
+
+yy <- yy <- ts(cases_2020, frequency = 366, start = c(2020,22))	
+plot.ts(yy)							
+
+```
+
+# Step 1: 
+```{r}
+# if p-value is large (> 0.10), then nonstationary
+
+adf.test(yy)		# nonstationary p-value = 0.9492
+
+yd <- diff(yy, differences = 1)	
+plot.ts(yd)								
+adf.test(yd) # nonstationary p-value = 0.6551
+
+yd2 <- diff(yy, differences = 2)			
+plot.ts(yd2)								# looks stationary visually, p-value = 0.01
+adf.test(yd2)
+
+```
+
+# Step 2. Decide AR(p) or MA(q) or both ARMA(p,q). Use the stationary series from Step 1. 
+```{r}
+
+#p and q should be 0,1,2
+
+# To decide AR(p), plot Pacf. For AR(p) => Pacf becomes zero at some lag p
+
+Pacf(yd2, lag.max = 10)			# p = 3
+
+
+# To decide MA, plot Acf. For MA(q) => Acf becomes zero at some lag q
+
+Acf(yd2, lag.max = 10)				# Acf suggests q = 3
+
+##SO p = 3, q =3, d =2 for ND data
+```
+
+# Step 3. Fit several ARIMA models. 	
+```{r}
+
+m1 <- auto.arima(yy)		#(2,2,5)
+summary(m1)
+
+m2 <- Arima(yy, order = c(3,2,4))			# note: differencing (d = 1) is specified in the "order"; so fit the original yy series (yy, not yd)
+
+summary(m2)		# see Accuracy using MAPE = Mean Absolute Percentage Error  MAPE: 2.499652, bic: 5235.34
+
+# do this for other p,d,q values
+
+m3 <- Arima(yy, order = c(3,2,5))	
+summary(m3) # 2.46866   
+
+m4 <- Arima(yy, order = c(2,2,4))	
+summary(m4) # 2.551742   
+
+m5 <- Arima(yy, order = c(1,2,5))	
+summary(m5) # 2.550621  
+
+m6 <- Arima(yy, order = c(1,2,4))	
+summary(m6) # 2.549978   
+
+m7 <- Arima(yy, order = c(1,2,6))	
+summary(m7) # 2.344829 
+
+m8 <- Arima(yy, order = c(2,2,6))	
+summary(m8) # 2.320986    
+
+m9 <- Arima(yy, order=c(2,2,6), seasonal = list(order = c(0,0,1), period = 52))
+summary(m9) # 2.277114  
+
+m10 <- Arima(yy, order=c(3,2,6), seasonal = list(order = c(0,1,0), period = 52))
+summary(m10) # 1.303625     
+
+m11 <- Arima(yy, order=c(2,2,6), seasonal = list(order = c(0,1,0), period = 52))
+summary(m11) # 1.284874        
+
+
+
+
+#auto way
+
+```
+
+```{r}
+
+m11.predict <- forecast:::forecast.Arima(m11, h = 41, level = c(68, 90))
+plot(m11.predict)
+
+```
+
+
+```{r}
+
+m11.predict <- forecast:::forecast.Arima(m11, h = 41, level = c(68, 90))
+plot(m11.predict)
+
+library(openxlsx)
+write.xlsx(m11.predict, file = "ZS_forecast_values.xlsx")
+```
+
+
+```{r}
+#From the summary() and AICc and BIC.
+
+#Decide the m2 is the best model, while m1, m3, m5, m7 are good too.
+
+#predict the result from Jan 1st 2021 to Feb 10th 2021 and plot the CI
+m1.predict <- forecast:::forecast.Arima(m1, h = 41, level = c(68, 90))
+plot(m1.predict)
+
+m2.predict <- forecast:::forecast.Arima(m2, h = 41, level = c(68, 90))
+plot(m2.predict)
+
+m3.predict <- forecast:::forecast.Arima(m3, h = 41, level = c(68, 90))
+plot(m3.predict)
+
+m4.predict <- forecast:::forecast.Arima(m4, h = 41, level = c(68, 90))
+plot(m4.predict)
+
+m5.predict <- forecast:::forecast.Arima(m5, h = 41, level = c(68, 90))
+plot(m5.predict)
+
+m6.predict <- forecast:::forecast.Arima(m6, h = 41, level = c(68, 90))
+plot(m6.predict)
+
+m7.predict <- forecast:::forecast.Arima(m7, h = 41, level = c(68, 90))
+plot(m7.predict)
+
+m8.predict <- forecast:::forecast.Arima(m8, h = 41, level = c(68, 90))
+plot(m8.predict)
+
+m8.predict <- forecast:::forecast.Arima(m8, h = 41, level = c(68, 90))
+plot(m8.predict)
+
+
+```
+
