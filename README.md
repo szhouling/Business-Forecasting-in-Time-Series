@@ -1,1 +1,3 @@
-# Business-Forecasting-in-Time-Series
+# Time Series Analysis Projects
+
+Welcome to my Time Series Analysis Projects repository! In this collection of projects, I delve into the analysis of time series data, where the past dependent variable influences the present and the present impacts the future. Unlike cross-sectional analysis, time series analysis focuses on understanding inter-temporal dependencies. Throughout these projects, I explore techniques to separate signal from noise, decompose time series into level, trend, and seasonal components, and forecast future outcomes along with associated uncertainties. By applying these methods to various time-series variables such as sales, inflation, and weather, I aim to gain insights into forecasting future trends and making informed decisions.
